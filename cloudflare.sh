@@ -24,7 +24,7 @@
 #
 # Usage: ./despf.sh | ./simplify.sh | mkblocks.sh | \
 #          mkzoneent.sh | ./cloudflare.sh <domain>
-# E.g.: ... | ./cloudflare.sh spf-tools.ml
+# E.g.: ... | ./cloudflare.sh energystan.com
 
 for cmd in jq awk sed grep
 do
@@ -37,9 +37,9 @@ a="/$0"; a=${a%/*}; a=${a#/}; a=${a:-.}; BINDIR=$(cd $a; pwd)
 test -n "$TOKEN" || { echo "TOKEN not set! Exiting." >&2; exit 1; }
 test -n "$EMAIL" || { echo "EMAIL not set! Exiting.">&2; exit 1; }
 
-DOMAIN=${1:-'spf-tools.ml'}
+DOMAIN=${1:-'energystan.com'}
 TTL=1 # 1 = auto
-APIURL="https://api.cloudflare.com/client/v4"
+APIURL="https://www.cloudflare.com/api_json.html"
 idsfile=$(mktemp /tmp/cloudflare-ids-XXXXXX)
 zonefile=$(mktemp /tmp/cloudflare-zone-XXXX)
 cat > $zonefile
@@ -49,15 +49,17 @@ trap "rm $idsfile $zonefile" EXIT
 test -r $SPFTRC && . $SPFTRC
 
 apicmd() {
-  curl -s \
-    -H "Content-Type:application/json" \
-    -H "X-Auth-Key:$TOKEN" \
-    -H "X-Auth-Email:$EMAIL" \
+  CMD=${1:-'stats'}
+  shift
+  curl $APIURL \
+    -s \
+    -d "a=$CMD" \
+    -d "tkn=$TOKEN" \
+    -d "email=$EMAIL" \
+    -d "z=$DOMAIN" \
     "$@"
 }
 
-apicmd $APIURL/user | jq .success | grep -q true || exit
-exit
 apicmd rec_load_all | \
   jq '.response.recs.objs[] | .name + " " + .type + " "
     + .rec_id + " " + .content' | \
@@ -70,7 +72,7 @@ do
   id_to_change=$(grep -x "^$domain TXT [0-9]\+ .v=spf1.*" $idsfile | \
     awk '{print $3}')
 
-  echo "Changing $domain with id $id_to_change... "
+  echo -n "Changing $domain with id $id_to_change... "
   apicmd rec_edit \
     -o /dev/null \
     -d 'type=TXT' \

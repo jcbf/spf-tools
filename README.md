@@ -7,12 +7,12 @@
 
 # SPF-tools
 
-[![Join the chat at https://gitter.im/jsarenik/spf-tools](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jsarenik/spf-tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![CircleCI badge][badge]][1]
 [![Codeship badge][cdbadge]][2]
 [![Travis-CI badge][travis]][3]
 [![SemaphoreCI badge][semaphore]][4]
+
+[![Join the chat at https://gitter.im/jsarenik/spf-tools][gitter]][5]
 
 Simple tools for keeping the SPF TXT records tidy in order to fight
 [10 maximum DNS lookups](http://serverfault.com/questions/584708).
@@ -22,13 +22,14 @@ Simple tools for keeping the SPF TXT records tidy in order to fight
 
 Your original TXT record which causes more than 10 DNS lookups
 should be saved as an otherwise unused subdomain TXT record
-(e.g. `orig.spf-tools.ml`).
+(e.g. `orig.energystan.com`).
 
 Create a configuration file:
 
     cat > ~/.spf-toolsrc <<EOF
-    DOMAIN=spf-tools.ml
-    ORIG_SPF=orig.spf-tools.ml
+    DOMAIN=energystan.com
+    ORIG_SPF=orig.energystan.com
+    DESPF_SKIP_DOMAINS=_spf.domain1.com:spf.domain2.org
     DNS_TIMEOUT=5
     EOF
 
@@ -38,6 +39,17 @@ Now just call any of the scripts described below.
 ## Tools Description
 
 ### despf.sh
+
+```
+Usage: despf.sh [OPTION]... [DOMAIN]...
+Decompose SPF records of a DOMAIN, sort and unique them.
+
+Available options:
+  -s DOMAIN[:DOMAIN...]      skip domains, i.e. leave include
+                             without decomposition
+  -t N                       set DNS timeout to N seconds
+  -h                         display this help and exit
+```
 
 `despf.sh` is a tool that resolves all `ip4` and `ip6` blocks
 found in any included SPF subdomain. It prints all these blocks
@@ -58,7 +70,8 @@ Example:
     ip6:2c0f:fb50:4000::/36
 
 The `DNS_TIMEOUT` configuration variable sets number of seconds
-for the `dig +time=SECS` command.
+for the `dig +time=SECS` command (the same as option `-t`, see
+help).
 
 
 ### mkblocks.sh
@@ -139,8 +152,8 @@ To use this script, file `.spf-toolsrc` in `$HOME` directory should
 contain `TOKEN` and `EMAIL` variable definitions which are then used
 to connect to CloudFlare API. The file should also contain `DOMAIN`
 and `ORIG_SPF` variables which stand for the target SPF domain
-(e.g. `spf-tools.ml`) and original SPF record with includes
-(e.g. `orig.spf-tools.ml`) in order to use `runspftools.sh`
+(e.g. `energystan.com`) and original SPF record with includes
+(e.g. `orig.energystan.com`) in order to use `runspftools.sh`
 without modifying the script.
 
 Usage:
@@ -159,8 +172,8 @@ Usage:
 
 ## Links
 
- * https://dmarcian.com/spf-survey/spf-tools.ml
- * https://dmarcian.com/spf-survey/orig.spf-tools.ml
+ * https://dmarcian.com/spf-survey/spf.energystan.com
+ * https://dmarcian.com/spf-survey/orig.energystan.com
  * http://www.kitterman.com/spf/validate.html
  * http://serverfault.com/questions/584708
  * http://www.openspf.org/SPF_Record_Syntax
@@ -193,3 +206,5 @@ Usage:
 [3]: https://travis-ci.org/jsarenik/spf-tools.svg
 [semaphore]: https://semaphoreci.com/api/v1/jsarenik/spf-tools/branches/master/badge.svg
 [4]: https://semaphoreci.com/jsarenik/spf-tools
+[gitter]: https://badges.gitter.im/Join%20Chat.svg
+[5]: https://gitter.im/jsarenik/spf-tools

@@ -72,7 +72,7 @@ printip() {
 }
 
 # dea <hostname> <cidr>
-# dea both.spf-tools.ml
+# dea both.energystan.com
 # 1.2.3.4
 # fec0::1
 dea() {
@@ -104,18 +104,33 @@ parsepf() {
   done
 }
 
+# in_list item list
+# e.g _spf.google.com  salesforce.com:google.com:outlook.com
+in_list() {
+  test $# = 2 && echo $2 | grep -wq $1
+}
+
 # getem <includes>
 # e.g. includes="include:gnu.org include:google.com"
 getem() {
   myloop=$1
   shift
   echo $* | tr " " "\n" | sed '/^$/d' | cut -b 9- | while read included
-  do echo Getting $included 1>&2; despf $included $myloop
+  do
+    if
+      in_list "$included" "$DESPF_SKIP_DOMAINS"
+    then
+      echo "Skipping $included" 1>&2;
+      echo "include:$included"
+    else
+      echo Getting $included 1>&2;
+      despf $included $myloop
+    fi
   done
 }
 
 # getamx host mech [mech [...]]
-# e.g. host="spf-tools.ml"
+# e.g. host="energystan.com"
 # e.g. mech="a a:gnu.org a:google.com/24 mx:gnu.org mx:jasan.tk/24"
 getamx() {
   host=$1
@@ -172,15 +187,17 @@ cleanup() {
 }
 
 despfit() {
-  host=$1
+  hosts="$1"
   myloop=$2
 
   # Make sort(1) behave
   export LC_ALL=C
   export LANG=C
 
-  despf $host $myloop > "$myloop-out"
-  sort -u $myloop-out
+  for host in $hosts
+  do
+    despf $host $myloop
+  done | sort -u
 }
 
 checkval4() {
