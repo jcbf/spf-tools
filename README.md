@@ -7,28 +7,38 @@
 
 # SPF-tools
 
-[![CircleCI badge][badge]][1]
-[![Codeship badge][cdbadge]][2]
-[![Travis-CI badge][travis]][3]
-[![SemaphoreCI badge][semaphore]][4]
+[![CircleCI badge][circle-img]][circle]
+[![Codeship badge][codeship-img]][codeship]
+[![Travis-CI badge][travis-img]][travis]
+[![SemaphoreCI badge][semaphore-img]][semaphore]
+[![Magnum CI badge][magnum-img]][magnum]
+[![Shippable badge][shippable-img]][shippable]
 
-[![Join the chat at https://gitter.im/jsarenik/spf-tools][gitter]][5]
+[![Join the chat at https://gitter.im/jsarenik/spf-tools][gitter-img]][gitter]
 
 Simple tools for keeping the SPF TXT records tidy in order to fight
-[10 maximum DNS lookups](http://serverfault.com/questions/584708).
+[10 maximum DNS look-ups](http://serverfault.com/questions/584708).
+
+## Release notes
+
+### 2016/11 - new records on output
+
+spf-tools in version f4f51f7d327820c904572ea54c37634e2b2b792a do not
+output merely `ip4` and `ip6` records, but also keep original `ptr`
+and `exists` ones.
 
 
 ## General Usage
 
-Your original TXT record which causes more than 10 DNS lookups
+Your original TXT record which causes more than 10 DNS look-ups
 should be saved as an otherwise unused subdomain TXT record
-(e.g. `orig.energystan.com`).
+(e.g. `spf-orig.jasan.tk`).
 
 Create a configuration file:
 
     cat > ~/.spf-toolsrc <<EOF
-    DOMAIN=energystan.com
-    ORIG_SPF=orig.energystan.com
+    DOMAIN=jasan.tk
+    ORIG_SPF=spf-orig.jasan.tk
     DESPF_SKIP_DOMAINS=_spf.domain1.com:spf.domain2.org
     DNS_TIMEOUT=5
     EOF
@@ -43,6 +53,7 @@ Now just call any of the scripts described below.
 ```
 Usage: despf.sh [OPTION]... [DOMAIN]...
 Decompose SPF records of a DOMAIN, sort and unique them.
+DOMAIN may be specified in an environment variable.
 
 Available options:
   -s DOMAIN[:DOMAIN...]      skip domains, i.e. leave include
@@ -70,7 +81,7 @@ Example:
     ip6:2c0f:fb50:4000::/36
 
 The `DNS_TIMEOUT` configuration variable sets number of seconds
-for the `dig +time=SECS` command (the same as option `-t`, see
+for the `host -W SECS` command (the same as option `-t`, see
 help).
 
 
@@ -152,33 +163,56 @@ To use this script, file `.spf-toolsrc` in `$HOME` directory should
 contain `TOKEN` and `EMAIL` variable definitions which are then used
 to connect to CloudFlare API. The file should also contain `DOMAIN`
 and `ORIG_SPF` variables which stand for the target SPF domain
-(e.g. `energystan.com`) and original SPF record with includes
-(e.g. `orig.energystan.com`) in order to use `runspftools.sh`
+(e.g. `jasan.tk`) and original SPF record with includes
+(e.g. `spf-orig.jasan.tk`) in order to use `runspftools.sh`
 without modifying the script.
 
 Usage:
 
     ./despf.sh | ./normalize.sh | ./simplify.sh | ./mkblocks.sh \
       > /tmp/out 2>&1
-    grep "Too many DNS lookups!" /tmp/out \
+    grep "Too many DNS look-ups!" /tmp/out \
       || cat /tmp/out | ./mkzoneent.sh | ./cloudflare.sh
 
 
-## Example
+### iprange.sh
 
-    ./despf.sh | ./normalize.sh | ./simplify.sh \
+Extra dependencies: [iprange](https://github.com/firehol/iprange)
+
+This script optimizes the IPv4 address block output (similar to, but
+more than `simplify.sh` because it can join multiple networks into
+one bigger).
+
+Usage:
+
+    ./despf.sh | ./iprange.sh
+
+Example:
+
+    $ ./despf.sh cont.jasan.tk
+    ip4:13.111.0.0/24
+    ip4:13.111.1.0/24
+    ip4:13.111.2.0/24
+    ip4:13.111.3.0/24
+    $ ./despf.sh cont.jasan.tk | ./iprange.sh
+    ip4:13.111.0.0/22
+
+## Putting it all together
+
+    ./despf.sh | ./normalize.sh | ./simplify.sh | ./iprange.sh \
       | ./mkblocks.sh | ./xsel.sh
 
 
 ## Links
 
- * https://dmarcian.com/spf-survey/spf.energystan.com
- * https://dmarcian.com/spf-survey/orig.energystan.com
+ * https://dmarcian.com/spf-survey/spf.jasan.tk
+ * https://dmarcian.com/spf-survey/spf-orig.jasan.tk
  * http://www.kitterman.com/spf/validate.html
  * http://serverfault.com/questions/584708
  * http://www.openspf.org/SPF_Record_Syntax
  * http://tools.ietf.org/html/rfc7208#section-5.5
  * http://tools.ietf.org/html/rfc7208#section-14.1
+ * https://space.dmarcian.com/too-many-dns-lookups/
 
 
 ## License
@@ -198,13 +232,17 @@ Usage:
     limitations under the License.
 
 
-[badge]: https://circleci.com/gh/jsarenik/spf-tools/tree/master.png?circle-token=76b5be548795219cce8df5780def8eceaa134c35 "Test status"
-[1]: https://circleci.com/gh/jsarenik/spf-tools
-[cdbadge]: https://codeship.com/projects/8958e590-0616-0133-c43a-12a4c431c178/status?branch=master
-[2]: https://codeship.com/projects/89613
-[travis]: https://travis-ci.org/jsarenik/spf-tools.svg?branch=master
-[3]: https://travis-ci.org/jsarenik/spf-tools.svg
-[semaphore]: https://semaphoreci.com/api/v1/jsarenik/spf-tools/branches/master/badge.svg
-[4]: https://semaphoreci.com/jsarenik/spf-tools
-[gitter]: https://badges.gitter.im/Join%20Chat.svg
-[5]: https://gitter.im/jsarenik/spf-tools
+[circle-img]: https://circleci.com/gh/jsarenik/spf-tools/tree/master.png?circle-token=76b5be548795219cce8df5780def8eceaa134c35 "Test status"
+[circle]: https://circleci.com/gh/jsarenik/spf-tools
+[codeship-img]: https://codeship.com/projects/8958e590-0616-0133-c43a-12a4c431c178/status?branch=master
+[codeship]: https://codeship.com/projects/89613
+[travis-img]: https://travis-ci.org/jsarenik/spf-tools.svg?branch=master
+[travis]: https://travis-ci.org/jsarenik/spf-tools
+[semaphore-img]: https://semaphoreci.com/api/v1/jsarenik/spf-tools/branches/master/badge.svg
+[semaphore]: https://semaphoreci.com/jsarenik/spf-tools
+[magnum-img]: https://magnum-ci.com/status/10aadca49949b855fa11ca7a44022c8a.png
+[magnum]: https://magnum-ci.com/public/1acdb8198c9cbd13c5db/builds
+[gitter-img]: https://badges.gitter.im/Join%20Chat.svg
+[gitter]: https://gitter.im/jsarenik/spf-tools
+[shippable-img]: https://api.shippable.com/projects/5770eda33be4f4faa56ae58a/badge?branch=master
+[shippable]: https://app.shippable.com/projects/5770eda33be4f4faa56ae58a/status/

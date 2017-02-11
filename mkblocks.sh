@@ -26,7 +26,7 @@ do
 done
 
 # Default values
-domain="energystan.com"
+domain=${DOMAIN:-"jasan.tk"}
 prefix="spf"
 policy="~all"
 delim="^"
@@ -55,7 +55,6 @@ usage() {
     exit 1
 }
 
-test "$#" -gt 0 || usage
 while getopts "h:l:p:o:d:-" opt; do
   case $opt in
     h) test -n "$OPTARG" && header=$OPTARG;;
@@ -107,7 +106,7 @@ do
     myout $incldomain "${blocksprev} ${footer}" $counter
     blocks=$block
     counter=$((counter+1))
-    test $counter -gt 10 && { echo "Too many DNS lookups!" 1>&2; exit 1; }
+    test $counter -gt 10 && { echo "Too many DNS look-ups!" 1>&2; exit 1; }
   }
 done
 
