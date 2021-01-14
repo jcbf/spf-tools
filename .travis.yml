@@ -1,7 +1,7 @@
 #language: shell
 language: ruby
 rvm:
- - 2.2.5
+ - 2.6
 matrix:
 env:
     - COVERAGE=1
@@ -15,9 +15,8 @@ before_install:
 
 install:
   - gem install coveralls
-  - gem install bashcov
+  - gem install bashcov --version 1.8.2 --no-format-exec
   - gem regenerate_binstubs
-  - export PATH="$PATH:$PWD:$GEM_PATH:/home/travis/.rvm/gems/ruby-2.2.5/wrappers"
   - sh -e misc/ci-setup.sh
 
 script:
